@@ -2,6 +2,8 @@
 /* Definitions section */
 #include "hw3_output.hpp"
 #include "source.hpp"
+SymbolMapStack symbolMapStack;
+OffsetStack offsetStack;
 extern int yylineno;
 int yylex();
 void yyerror(const char*);
@@ -115,7 +117,7 @@ Exp: LPAREN Type RPAREN Exp %prec CASTING                               {  } ;
 
 /* C user routines */
 int main() {
-    Engine.Initialize();
+    Initialize();
     return yyparse();
 }
 void yyerror(char const* msg) {

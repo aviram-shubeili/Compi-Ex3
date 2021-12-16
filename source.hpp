@@ -1,9 +1,10 @@
-#include <string>
-#include <stdexcept>
 #include <stack>
 #include <map>
 #include <memory>
 #include "Type.h"
+
+
+
 
 enum reloptype {
     EQUALS,
@@ -71,14 +72,23 @@ public:
     String(std::string text, int num) : Node(num), value(text) {}
 };
 
+#define YYSTYPE Node*
+
+
 class Symbol  {
 public:
     std::string name;
     std::shared_ptr<Type> type;
     int offset;
+    Symbol(std::string n, Type* t, int ofs) : name(std::move(n)), type(t), offset(ofs) {}
 };
 
-typedef OffsetStack = std::stack<int>;
-typedef SymbolMap = std::map<std::string, Symbol>;
-typedef SymbolMapStack = std::stack<SymbolMap>;
-#define YYSTYPE Node*
+typedef std::stack<int> OffsetStack ;
+typedef std::map<std::string, Symbol> SymbolMap;
+typedef std::stack<SymbolMap> SymbolMapStack;
+extern SymbolMapStack symbolMapStack;
+extern OffsetStack offsetStack;
+extern void Initialize();
+
+
+
