@@ -1,15 +1,22 @@
 #include "source.hpp"
 #include <memory>
-
+#include <cassert>
 using namespace std;
 
 void Initialize() {
-    Symbol printFunc = Symbol("print",new FunctionType(false, VOID_TYPE, {STRING_TYPE} ),0);
-    Symbol printiFunc = Symbol("printi",new FunctionType(false, VOID_TYPE, {INT_TYPE} ),1);
     offsetStack.push(0);
-    SymbolMap globalSymbolMap;
-    globalSymbolMap.insert(make_pair(printFunc.name, printFunc));
-    globalSymbolMap.insert(make_pair(printiFunc.name, printiFunc));
-    symbolMapStack.push(globalSymbolMap);
+    symbolMapStack.push(SymbolMap());
+    insertSymbol("print", new FunctionType(false, VOID_TYPE, {STRING_TYPE} ));
+    insertSymbol("printi", new FunctionType(false, VOID_TYPE, {INT_TYPE} ));
 }
 
+void addTable() {
+    symbolMapStack.push(SymbolMap());
+    assert(not offsetStack.empty());
+    offsetStack.push((offsetStack.top()));
+}
+
+void insertSymbol(string name, Type* type ) {
+    Symbol s = Symbol(name,type ,offsetStack.top()++);
+    symbolMapStack.top().insert(make_pair(s.name, s));
+}

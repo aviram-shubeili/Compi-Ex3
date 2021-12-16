@@ -89,6 +89,7 @@ typedef std::stack<SymbolMap> SymbolMapStack;
 extern SymbolMapStack symbolMapStack;
 extern OffsetStack offsetStack;
 extern void Initialize();
-
+void insertSymbol(std::string name, Type* type );
+void addTable();
 
 
