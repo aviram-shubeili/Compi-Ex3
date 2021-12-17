@@ -2,8 +2,6 @@
 /* Definitions section */
 #include "hw3_output.hpp"
 #include "source.hpp"
-SymbolMapStack symbolMapStack;
-OffsetStack offsetStack;
 extern int yylineno;
 int yylex();
 void yyerror(const char*);
@@ -11,6 +9,7 @@ void yyerror(const char*);
 %}
 /* Declarations */
 
+/* Regular tokens */
 %token ID
 %token NUM
 %token STRING
@@ -63,7 +62,8 @@ void yyerror(const char*);
 
 %%
 /* Rules */
-Program: Funcs                                                          {  } ;
+Program: M_Init Funcs                                                   {  } ;
+M_Init: /*epsilon*/                                                     { SymbolsRepo::Instance().Initialize(); } ;
 Funcs: /*epsilon*/                                                      {  } ;
 Funcs: FuncDecl Funcs                                                   {  } ;
 FuncDecl: RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE     {  } ;
@@ -117,7 +117,6 @@ Exp: LPAREN Type RPAREN Exp %prec CASTING                               {  } ;
 
 /* C user routines */
 int main() {
-    Initialize();
     return yyparse();
 }
 void yyerror(char const* msg) {

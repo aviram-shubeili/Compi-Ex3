@@ -1,8 +1,8 @@
 #include <stack>
 #include <map>
 #include <memory>
+#include "SymbolsRepo.h"
 #include "Type.h"
-
 
 
 
@@ -75,21 +75,13 @@ public:
 #define YYSTYPE Node*
 
 
-class Symbol  {
-public:
-    std::string name;
-    std::shared_ptr<Type> type;
-    int offset;
-    Symbol(std::string n, Type* t, int ofs) : name(std::move(n)), type(t), offset(ofs) {}
-};
 
-typedef std::stack<int> OffsetStack ;
-typedef std::map<std::string, Symbol> SymbolMap;
-typedef std::stack<SymbolMap> SymbolMapStack;
-extern SymbolMapStack symbolMapStack;
-extern OffsetStack offsetStack;
-extern void Initialize();
-void insertSymbol(std::string name, Type* type );
-void addTable();
+
+//typedef std::stack<int> OffsetStack ;
+//typedef std::map<std::string, Symbol> SymbolMap;
+//typedef std::stack<SymbolMap> SymbolMapStack;
+//extern SymbolMapStack symbolMapStack;
+//extern OffsetStack offsetStack;
+
 
 
