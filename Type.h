@@ -20,6 +20,7 @@ public:
     bool is_const;
     enum basictype type;
     Type(bool is_const, basictype t) : is_const(is_const), type(t) {}
+    friend bool operator==(const Type& lhs, const Type& rhs);
 
 };
 

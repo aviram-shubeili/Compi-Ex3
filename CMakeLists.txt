@@ -8,4 +8,5 @@ add_executable(Ex3
         parser.tab.cpp
         source.cpp
         SymbolsRepo.cpp
+        Type.cpp
         )
