@@ -21,11 +21,21 @@ enum binoptype {
     DIV
 };
 
-struct Node {
+class Node {
+public:
     int lineno;
-    Node(int num) : lineno(num) {}
+    explicit Node(int num) : lineno(num) {}
 };
-
+class TypeNode : public Node {
+public:
+    basictype type;
+    TypeNode(basictype t, int num) : Node(num), type(t) {}
+};
+class FormalsNode : public Node {
+public:
+    std::vector<Type> args;
+    explicit FormalsNode(int num) : Node(num) {}
+};
 class Relop : public Node {
 public:
     enum reloptype type;
@@ -50,10 +60,10 @@ public:
         else throw std::invalid_argument("wrong Binop");
     }
 };
-class Id : public Node {
+class IdNode : public Node {
 public:
-    std::string value;
-    Id(std::string text, int num) : Node(num), value(text) {}
+    std::string name;
+    IdNode(std::string text, int num) : Node(num), name(text) {}
 };
 
 class Num : public Node {

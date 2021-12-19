@@ -62,20 +62,82 @@ void yyerror(const char*);
 
 %%
 /* Rules */
-Program: M_Init Funcs                                                   {  } ;
-M_Init: /*epsilon*/                                                     { SymbolsRepo::Instance().Initialize(); } ;
-Funcs: /*epsilon*/                                                      {  } ;
-Funcs: FuncDecl Funcs                                                   {  } ;
-FuncDecl: RetType ID LPAREN Formals RPAREN LBRACE Statements RBRACE     {  } ;
-RetType: Type                                                           {  } ;
-RetType:  VOID                                                          {  } ;
-Formals: /*epsilon*/                                                    {  } ;
-Formals: FormalsList                                                    {  } ;
-FormalsList: FormalDecl                                                 {  } ;
-FormalsList: FormalDecl COMMA FormalsList                               {  } ;
-FormalDecl: TypeAnnotation Type ID                                      {  } ;
-Statements: Statement                                                   {  } ;
-Statements: Statements Statement                                        {  } ;
+Program: M_Init Funcs
+{
+  try {
+      SymbolsRepo::Instance().findSymbol("main");
+  }
+  catch(SymbolNotFound& e) {
+    output::errorMainMissing();
+    exit(0);
+  }
+  SymbolsRepo::Instance().closeScope();
+} ;
+
+/* ******************************************************************************************** */
+
+M_Init: /*epsilon*/
+{
+  SymbolsRepo::Instance().Initialize();
+} ;
+/* ******************************************************************************************** */
+
+Funcs: /*epsilon*/
+{  } ;
+/* ******************************************************************************************** */
+
+Funcs: FuncDecl Funcs
+ {  } ;
+ /* ******************************************************************************************** */
+FuncDecl: RetType ID LPAREN Formals RPAREN
+                                            {
+                                              if(SymbolsRepo::Instance().Contains((IdNode*)$2.name)) {
+                                                 errorDef($2.lineno, (IdNode*)$2.name);
+                                                 exit(0);
+                                              }
+                                              SymbolsRepo::Instance().insertSymbol((IdNode*)$2.name, Type((RetTypeNode*)$1.type, (FormalsNode*)$4.args));
+                                              SymbolsRepo::Instance().openNewScope();
+                                            }
+
+ LBRACE Statements RBRACE
+ {
+    SymbolsRepo::Instance().closeScope();
+ } ;
+
+/* ******************************************************************************************** */
+RetType: Type
+ {
+    $$ = new Type((TypeNode)$1.type);
+ };
+/* ******************************************************************************************** */
+RetType:  VOID
+{
+    $$ = new Type(VOID_TYPE);
+ } ;
+/* ******************************************************************************************** */
+Formals: /*epsilon*/
+{
+  $$ = new FormalsNode();
+ } ;
+/* ******************************************************************************************** */
+Formals: FormalsList
+{  } ;
+/* ******************************************************************************************** */
+FormalsList: FormalDecl
+{  } ;
+/* ******************************************************************************************** */
+FormalsList: FormalDecl COMMA FormalsList
+{  } ;
+/* ******************************************************************************************** */
+FormalDecl: TypeAnnotation Type ID
+{  } ;
+/* ******************************************************************************************** */
+Statements: Statement
+{  } ;
+/* ******************************************************************************************** */
+Statements: Statements Statement
+{  } ;
+/* ******************************************************************************************** */
 Statement: LBRACE Statements RBRACE                                     {  } ;
 Statement: TypeAnnotation Type ID SC                                    {  } ;
 Statement: TypeAnnotation Type ID ASSIGN Exp SC                         {  } ;

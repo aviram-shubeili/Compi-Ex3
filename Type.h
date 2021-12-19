@@ -10,7 +10,6 @@ enum basictype {
     VOID_TYPE,
     INT_TYPE,
     BYTE_TYPE,
-    NUM_TYPE,
     STRING_TYPE,
     BOOL_TYPE
 };
@@ -18,24 +17,24 @@ enum basictype {
 class Type {
 public:
     bool is_const;
+    bool is_function;
     enum basictype type;
-    Type(bool is_const, basictype t) : is_const(is_const), type(t) {}
+    std::vector<Type> arguments;
+    std::string toString();
+    explicit Type(basictype t) : is_const(false), is_function(false), type(t) {}
+    Type(bool is_const, basictype t) : is_const(is_const), is_function(false), type(t) {}
+    Type(basictype t, std::vector<Type> args ) : is_const(false), is_function(true), type(t), arguments(std::move(args)) {}
     friend bool operator==(const Type& lhs, const Type& rhs);
 
-};
-
-class FunctionType : public Type {
-public:
-    std::vector<enum basictype> arguments;
-    FunctionType(bool ic, basictype t, std::vector<enum basictype> args ) : Type(ic,t), arguments(std::move(args)) {}
-    FunctionType(bool is_const, basictype t ) : Type(is_const,t), arguments(std::vector<enum basictype>()) {}
 };
 
 class Symbol  {
 public:
     std::string name;
-    std::shared_ptr<Type> type;
+    Type type;
     int offset;
-    Symbol(std::string n, Type* t, int ofs) : name(std::move(n)), type(t), offset(ofs) {}
+    Symbol(std::string n, Type t, int ofs) : name(std::move(n)), type(std::move(t)), offset(ofs) {}
 };
 #endif //COMPI_EX3_TYPE_H
+
+
