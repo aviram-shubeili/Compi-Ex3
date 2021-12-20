@@ -1,10 +1,11 @@
 #include <stack>
 #include <map>
 #include <memory>
+#include <utility>
 #include "SymbolsRepo.h"
 #include "Type.h"
 
-
+#define DONT_CARE -1
 
 enum reloptype {
     EQUALS,
@@ -29,12 +30,30 @@ public:
 class TypeNode : public Node {
 public:
     basictype type;
-    TypeNode(basictype t, int num) : Node(num), type(t) {}
+    TypeNode(basictype t, int lineno) : Node(lineno), type(t) {}
 };
 class FormalsNode : public Node {
 public:
-    std::vector<Type> args;
-    explicit FormalsNode(int num) : Node(num) {}
+    std::vector<Symbol> arguments;
+    FormalsNode(int num, std::vector<Symbol> args);
+    FormalsNode() : Node(DONT_CARE) {}
+};
+class FormalsListNode : public Node {
+public:
+    std::vector<Symbol> args;
+    explicit FormalsListNode(int num) : Node(num) {}
+    FormalsListNode(int num, std::vector<Symbol> args) : Node(num), args(std::move(args)) {}
+    void addArgument(int lineno, Symbol arg);
+};
+class FormalDeclNode : public Node {
+public:
+    Symbol arg;
+    FormalDeclNode(int lineno, bool is_const, basictype type, std::string name);
+};
+class TypeAnnotationNode : public Node {
+public:
+    bool is_const;
+    explicit TypeAnnotationNode(bool is_const, int lineno = DONT_CARE) : Node(lineno), is_const(is_const) {}
 };
 class Relop : public Node {
 public:

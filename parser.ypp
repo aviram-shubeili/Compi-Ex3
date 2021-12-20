@@ -91,12 +91,17 @@ Funcs: FuncDecl Funcs
  /* ******************************************************************************************** */
 FuncDecl: RetType ID LPAREN Formals RPAREN
                                             {
-                                              if(SymbolsRepo::Instance().Contains((IdNode*)$2.name)) {
+                                              try {
+                                                SymbolsRepo::Instance().insertSymbol((IdNode*)$2.name, Type((RetTypeNode*)$1.type, (FormalsNode*)$4.arguments));
+                                              }
+                                              catch (SymbolAlreadyDefinedInScope& e) {
                                                  errorDef($2.lineno, (IdNode*)$2.name);
                                                  exit(0);
                                               }
-                                              SymbolsRepo::Instance().insertSymbol((IdNode*)$2.name, Type((RetTypeNode*)$1.type, (FormalsNode*)$4.args));
                                               SymbolsRepo::Instance().openNewScope();
+                                              for(auto& arg : (FormalsNode*)$4.arguments) {
+                                                SymbolsRepo::Instance().insertSymbolAsArgument(arg.name, arg);
+                                              }
                                             }
 
  LBRACE Statements RBRACE
@@ -121,26 +126,58 @@ Formals: /*epsilon*/
  } ;
 /* ******************************************************************************************** */
 Formals: FormalsList
-{  } ;
+{
+  $$ = new FormalsNode($1.lineno, (FormalsListNode*)$1.args);
+ } ;
 /* ******************************************************************************************** */
 FormalsList: FormalDecl
-{  } ;
+{
+    $$ = new FormalsListNode($1.lineno,  {(FormalDeclNode*)$1.arg} );
+ } ;
 /* ******************************************************************************************** */
 FormalsList: FormalDecl COMMA FormalsList
-{  } ;
+{
+    $$ = $3;
+    $$.addArgument($1.lineno, (FormalDeclNode*)$1.arg);
+ } ;
 /* ******************************************************************************************** */
 FormalDecl: TypeAnnotation Type ID
-{  } ;
+{
+    $$ = new FormalDeclNode($1.lineno, (TypeAnnotationNode*)$1.is_const, (TypeNode*)$2.type, (IdNode*)$3.name );
+} ;
 /* ******************************************************************************************** */
 Statements: Statement
-{  } ;
+{
+} ;
 /* ******************************************************************************************** */
 Statements: Statements Statement
-{  } ;
+{
+} ;
 /* ******************************************************************************************** */
-Statement: LBRACE Statements RBRACE                                     {  } ;
-Statement: TypeAnnotation Type ID SC                                    {  } ;
-Statement: TypeAnnotation Type ID ASSIGN Exp SC                         {  } ;
+Statement: { SymbolsRepo::Instance().openNewScope(); } LBRACE Statements RBRACE
+ {
+   SymbolsRepo::Instance().closeScope();
+ } ;
+/* ******************************************************************************************** */
+Statement: TypeAnnotation Type ID SC
+{
+    if((TypeAnnotationNode*)$1.is_const) { /* TODO $1 or $4? */
+      errorConstDef($1.lineno);
+      exit(0);
+    }
+    try {
+      SymbolsRepo::Instance().insertSymbol((IdNode*)$3.name, Type(false, (TypeNode*)$2.type));
+    }
+    catch (SymbolAlreadyDefinedInScope& e) {
+        errorDef($3.lineno, (IdNode*)$3.name);
+        exit(0);
+    }
+};
+/* ******************************************************************************************** */
+Statement: TypeAnnotation Type ID ASSIGN Exp SC
+{
+} ;
+/* ******************************************************************************************** */
 Statement: ID ASSIGN Exp SC                                             {  } ;
 Statement: Call SC                                                      {  } ;
 Statement: RETURN SC                                                    {  } ;
@@ -157,8 +194,14 @@ ExpList: Exp COMMA ExpList                                              {  } ;
 Type: INT                                                               {  } ;
 Type: BYTE                                                              {  } ;
 Type: BOOL                                                              {  } ;
-TypeAnnotation: /*epsilon*/                                             {  } ;
-TypeAnnotation: CONST                                                   {  } ;
+TypeAnnotation: /*epsilon*/
+{
+   $$ = new TypeAnnotationNode(false);
+} ;
+TypeAnnotation: CONST
+{
+  $$ = new TypeAnnotationNode(true, $1.lineno);
+} ;
 Exp: LPAREN Exp RPAREN                                                  {  } ;
 Exp: Exp MULDIV_BINOP Exp                                               {  } ;
 Exp: Exp ADDSUB_BINOP Exp                                               {  } ;
