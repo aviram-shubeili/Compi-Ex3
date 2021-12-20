@@ -44,8 +44,8 @@ continue                                                   { yylval = new Node(y
 {equality}                                                 { yylval = new Relop(yytext, yylineno); return EQUALITY;                     }
 {muldiv_binop}                                             { yylval = new Binop(yytext, yylineno); return MULDIV_BINOP;                 }
 {addsub_binop}                                             { yylval = new Binop(yytext, yylineno); return ADDSUB_BINOP;                 }
-[a-zA-Z][a-zA-Z0-9]*                                       { yylval = new Id(yytext, yylineno); return ID;                              }
-0|[1-9][0-9]*                                              { yylval = new Num(yytext, yylineno); return NUM;                            }
-\"([^\n\r\"\\]|\\[rnt\"\\])+\"                             { yylval = new String(yytext, yylineno); return STRING;                      }
+[a-zA-Z][a-zA-Z0-9]*                                       { yylval = new IdNode(yytext, yylineno); return ID;                              }
+0|[1-9][0-9]*                                              { yylval = new NumNode(yytext, yylineno); return NUM;                            }
+\"([^\n\r\"\\]|\\[rnt\"\\])+\"                             { yylval = new StringNode(yytext, yylineno); return STRING;                      }
 {whitespace}|(\/\/[^\r\n]*[ \r|\n|\r\n]?)                  {                                                                            }
 .                                                          { output::errorLex(yylineno); exit(0);                                       }

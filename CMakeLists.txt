@@ -9,4 +9,5 @@ add_executable(Ex3
         source.cpp
         SymbolsRepo.cpp
         Type.cpp
+        hw3_output.cpp
         )

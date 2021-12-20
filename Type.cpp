@@ -1,4 +1,5 @@
 #include "Type.h"
+#include <algorithm>
 
 // TODO do we need this?
 //template<typename Base, typename T>
@@ -23,12 +24,56 @@ bool operator==(const Type& lhs, const Type& rhs) {
 }
 
 std::string Type::toString() {
-    switch (type) {
-        case INT_TYPE: return "INT";
-        case STRING_TYPE: return "STRING";
-        case BOOL_TYPE: return "BOOL";
-        case BYTE_TYPE: return "BYTE";
-        case VOID_TYPE: return "VOID";
+    std::string result;
+    switch (type) { // TODO: handle function types.
+        case INT_TYPE: result = "INT";
+            break;
+        case STRING_TYPE: result = "STRING";
+            break;
+        case BOOL_TYPE: result = "BOOL";
+            break;
+        case BYTE_TYPE: result = "BYTE";
+            break;
+        case VOID_TYPE: result = "VOID";
+            break;
+        default: assert(false);
     }
-    return "";
+    if (not is_function) {
+        return result;
+    } else {
+        std::vector<std::string> args = getArgumentsAsStrings();
+        result = output::makeFunctionType(result, args);
+        return result;
+    }
+}
+
+bool operator!=(const Type &lhs, const Type &rhs) {
+    return not (lhs == rhs);
+}
+
+std::vector<std::string> Type::getArgumentsAsStrings() {
+    std::vector<std::string> result;
+    for(Type& argument : arguments) {
+        result.push_back(argument.toString());
+    }
+    return result;
+}
+
+
+bool operator<(const Symbol &lhs, const Symbol &rhs) {
+    return (lhs.offset < rhs.offset);
+}
+
+bool hasSameArguments(std::vector<Type> expected, std::vector<Type> actual) {
+    // actual args are inserted in reverse order.
+    std::reverse(actual.begin(),actual.end());
+    if(expected.size() != actual.size()) {
+        return false;
+    }
+    for (int i = 0; i < expected.size(); i++) {
+        if(expected[i].type != actual[i].type) {
+            return false;
+        }
+    }
+    return true;
 }

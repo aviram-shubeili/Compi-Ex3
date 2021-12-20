@@ -55,6 +55,22 @@ public:
     bool is_const;
     explicit TypeAnnotationNode(bool is_const, int lineno = DONT_CARE) : Node(lineno), is_const(is_const) {}
 };
+class ExpNode : public Node {
+public:
+    basictype type;
+    ExpNode(int lineno, basictype type) : Node(lineno), type(type) {}
+};
+class ExpListNode : public Node {
+public:
+    std::vector<basictype> types;
+    ExpListNode(int lineno) : Node(lineno) {}
+    void addExp(basictype type);
+};
+class CallNode : public Node {
+public:
+    basictype type;
+    CallNode(int lineno, basictype type) : Node(lineno), type(type) {}
+};
 class Relop : public Node {
 public:
     enum reloptype type;
@@ -85,20 +101,20 @@ public:
     IdNode(std::string text, int num) : Node(num), name(text) {}
 };
 
-class Num : public Node {
+class NumNode : public Node {
 private:
     std::string value;
 public:
-    Num(std::string text, int num) : Node(num), value(text) {}
-    long long getNumber() {
-        return std::stoll(value);
+    NumNode(std::string text, int num) : Node(num), value(text) {}
+    int getNumber() {
+        return std::stoi(value);
     }
 };
 
-class String : public Node {
+class StringNode : public Node {
 public:
     std::string value;
-    String(std::string text, int num) : Node(num), value(text) {}
+    StringNode(std::string text, int num) : Node(num), value(text) {}
 };
 
 #define YYSTYPE Node*
