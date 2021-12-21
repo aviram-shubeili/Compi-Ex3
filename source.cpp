@@ -24,9 +24,17 @@ FormalsNode::FormalsNode(int num, std::vector<Symbol> args) : Node(num) {
     arguments = args;
 }
 
+std::vector<Type> FormalsNode::getArgumentsTypes() {
+    std::vector<Type> result;
+    for(Symbol& argument : arguments) {
+        result.push_back(argument.type);
+    }
+    return result;
+}
+
 FormalDeclNode::FormalDeclNode(int lineno, bool is_const, basictype type, std::string name) : Node(lineno),
                                                                                               arg(Symbol(name, Type(is_const,type),DONT_CARE)) {}
 
 void ExpListNode::addExp(basictype type) {
-    types.push_back(type);
+    types.emplace_back(type);
 }

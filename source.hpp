@@ -32,11 +32,17 @@ public:
     basictype type;
     TypeNode(basictype t, int lineno) : Node(lineno), type(t) {}
 };
+class RetTypeNode : public Node {
+public:
+    basictype type;
+    RetTypeNode(int lineno, basictype type) : Node(lineno), type(type) {}
+};
 class FormalsNode : public Node {
 public:
     std::vector<Symbol> arguments;
     FormalsNode(int num, std::vector<Symbol> args);
     FormalsNode() : Node(DONT_CARE) {}
+    std::vector<Type> getArgumentsTypes();
 };
 class FormalsListNode : public Node {
 public:
@@ -62,7 +68,7 @@ public:
 };
 class ExpListNode : public Node {
 public:
-    std::vector<basictype> types;
+    std::vector<Type> types;
     ExpListNode(int lineno) : Node(lineno) {}
     void addExp(basictype type);
 };
@@ -102,9 +108,8 @@ public:
 };
 
 class NumNode : public Node {
-private:
-    std::string value;
 public:
+    std::string value;
     NumNode(std::string text, int num) : Node(num), value(text) {}
     int getNumber() {
         return std::stoi(value);

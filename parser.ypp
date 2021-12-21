@@ -24,8 +24,6 @@ void yyerror(const char*);
 %token FALSE
 %token RETURN
 
-%nonassoc IF
-%nonassoc ELSE
 
 %token WHILE
 %token BREAK
@@ -58,6 +56,8 @@ void yyerror(const char*);
 %token LBRACE
 %token RBRACE
 
+%nonassoc IF
+%nonassoc ELSE
 
 
 %%
@@ -95,7 +95,7 @@ Funcs: FuncDecl Funcs
 FuncDecl: RetType ID LPAREN Formals RPAREN
                                             {
                                               try {
-                                                SymbolsRepo::Instance().insertSymbol(((IdNode*)$2)->name, Type(((RetTypeNode*)$1)->type, ((FormalsNode*)$4)->arguments));
+                                                SymbolsRepo::Instance().insertSymbol(((IdNode*)$2)->name, (Type(((RetTypeNode*)$1)->type, ((FormalsNode*)$4)->getArgumentsTypes())));
                                                 SymbolsRepo::Instance().currentFunctionName = ((IdNode*)$2)->name;
                                                 SymbolsRepo::Instance().openNewScope();
                                                 for(auto& arg : ((FormalsNode*)$4)->arguments) {
@@ -117,12 +117,12 @@ FuncDecl: RetType ID LPAREN Formals RPAREN
 /* ******************************************************************************************** */
 RetType: Type
  {
-    $$ = new Type((TypeNode)$1->type);
+    $$ = new RetTypeNode($1->lineno, ((TypeNode*)$1)->type);
  };
 /* ******************************************************************************************** */
-RetType:  VOID
+RetType: VOID
 {
-    $$ = new Type(VOID_TYPE);
+    $$ = new RetTypeNode($1->lineno, VOID_TYPE);
  } ;
 /* ******************************************************************************************** */
 Formals: /*epsilon*/
@@ -143,7 +143,7 @@ FormalsList: FormalDecl
 FormalsList: FormalDecl COMMA FormalsList
 {
     $$ = $3;
-    $$->addArgument($1->lineno, ((FormalDeclNode*)$1)->arg);
+    ((FormalsListNode*)$$)->addArgument($1->lineno, ((FormalDeclNode*)$1)->arg);
  } ;
 /* ******************************************************************************************** */
 FormalDecl: TypeAnnotation Type ID
@@ -198,7 +198,7 @@ Statement: ID ASSIGN Exp SC
 {
     try {
       Symbol id_sym = SymbolsRepo::Instance().findSymbol(((IdNode*)$1)->name);
-      if(id.sym.type.is_const) {
+      if(id_sym.type.is_const) {
         output::errorConstMismatch($1->lineno);
         exit(0);
       }
@@ -245,28 +245,12 @@ Statement: RETURN Exp SC
   }
 } ;
 /* ******************************************************************************************** */
-Statement: IF LPAREN Exp RPAREN
-                                {
-                                   if(((ExpNode*)$3)->type != BOOL_TYPE) {
-                                     output::errorMismatch($3->lineno);
-                                     exit(0);
-                                   }
-                                   SymbolsRepo::Instance().openNewScope();
-                                }
-Statement %prec IF
+Statement: IF LPAREN Exp M_IfOpenScope RPAREN Statement %prec IF
  {
    SymbolsRepo::Instance().closeScope();
  } ;
  /* ******************************************************************************************** */
-Statement: IF LPAREN Exp RPAREN
-                              {
-                                 if(((ExpNode*)$3)->type != BOOL_TYPE) {
-                                   output::errorMismatch($3->lineno);
-                                   exit(0);
-                                 }
-                                 SymbolsRepo::Instance().openNewScope();
-                              }
-Statement ELSE
+Statement: IF LPAREN Exp M_IfOpenScope RPAREN Statement ELSE
                               {
                                  SymbolsRepo::Instance().closeScope();
                                  SymbolsRepo::Instance().openNewScope();
@@ -433,7 +417,7 @@ Exp: ID
       if(id_sym.type.is_function) {
          throw SymbolNotFound();
       }
-      $$ = new ExpNode($1->lineno, id_sym.getType())
+      $$ = new ExpNode($1->lineno, id_sym.getType());
     }
     catch(SymbolNotFound& e) {
       output::errorUndef($1->lineno, ((IdNode*)$1)->name);
@@ -454,7 +438,7 @@ Exp: NUM
 Exp: NUM B
   {
     if(((NumNode*)$1)->getNumber() > 255) {
-        output::errorByteTooLarge($1->lineno, ((NumNode*)$1)->getNumber());
+        output::errorByteTooLarge($1->lineno, ((NumNode*)$1)->value);
         exit(0);
     }
     $$ = new ExpNode($1->lineno, BYTE_TYPE);
@@ -551,6 +535,16 @@ Exp: LPAREN Type RPAREN
     }
     $$ = new ExpNode($5->lineno, ((TypeNode*)$2)->type);
   } ;
+  /* ******************************************************************************************** */
+M_IfOpenScope: /* epsilon */ %prec IF
+ {
+   ExpNode* e = stack.peek(0);
+   if(e->type != BOOL_TYPE) {
+     output::errorMismatch(e->lineno);
+     exit(0);
+   }
+   SymbolsRepo::Instance().openNewScope();
+ };
   /* ******************************************************************************************** */
 %%
 
